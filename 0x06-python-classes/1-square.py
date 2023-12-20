@@ -4,6 +4,7 @@
 
 class Square:
     '''Class documentation: This class represents a square.'''
+
     def __init__(self, size):
         '''Method documentation: Initializes a new Square instance.
         
