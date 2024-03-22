@@ -3,23 +3,40 @@
 Script that lists all State objects from the database - Using module SQLAlchemy
 """
 from model_state import Base, State
-from sys import argv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sys import argv
 
 if __name__ == "__main__":
+    # Check if the correct number of arguments is provided
+    if len(argv) != 4:
+        print("Usage: {} username password database".format(argv[0]))
+        exit(1)
 
-    # create an engine
-    engine = create_engine('mysql+mysqldb://{}:{}@localhost/{}'.format(
-        argv[1], argv[2], argv[3]), pool_pre_ping=True)
+    # Database connection parameters
+    username, password, database = argv[1], argv[2], argv[3]
+    connection_string = 'mysql+mysqldb://{}:{}@localhost/{}'.format(
+        username, password, database)
 
-    # create a configured "Session" class
+    # Create an engine
+    engine = create_engine(connection_string, pool_pre_ping=True)
+
+    # Create a configured "Session" class
     Session = sessionmaker(bind=engine)
-    # create a Session
+
+    # Create a Session
     session = Session()
+
+    # Create database tables if they don't exist
     Base.metadata.create_all(engine)
 
-    s_tate = session.query(State).order_by(State.id).all()
-    for state in s_tate:
-        print("{}: {}".format(state.id, state.name))
-    session.close()
+    try:
+        # Query for all State objects and print their details
+        states = session.query(State).order_by(State.id).all()
+        for state in states:
+            print("{}: {}".format(state.id, state.name))
+    except Exception as e:
+        print("Error:", e)
+        session.rollback()  # Rollback changes in case of error
+    finally:
+        session.close()  # Close the session
